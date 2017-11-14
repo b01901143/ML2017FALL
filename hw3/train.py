@@ -40,10 +40,10 @@ if __name__ == '__main__':
     #model = load_model('check_point/'+sys.argv[1])
      
     input_img = Input(shape=(48, 48, 1))
-    block1 = Conv2D(50, (3, 3), padding='same', activation='relu')(input_img)
+    block1 = Conv2D(30, (3, 3), padding='same', activation='relu')(input_img)
     block1 = Dropout(0.2)(block1)
 
-    block2 = Conv2D(50, (5, 5), padding='same', activation='relu')(block1)
+    block2 = Conv2D(40, (5, 5), padding='same', activation='relu')(block1)
     block2 = AveragePooling2D(pool_size=(4, 4), strides=(2, 2))(block2)
     block2 = Dropout(0.2)(block2)
 

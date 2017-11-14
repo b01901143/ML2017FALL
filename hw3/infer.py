@@ -38,5 +38,5 @@ if __name__ == '__main__':
     with open(output_path, 'w') as f:
         f.write('id,label\n')
         for i, v in  enumerate(y_):
-            f.write('%d,%d\n' %(i+1, v))
+            f.write('%d,%d\n' %(i, v))
 
