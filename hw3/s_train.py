@@ -1,0 +1,146 @@
+import keras
+from keras.preprocessing.image import ImageDataGenerator
+from keras.models import Model, load_model, Sequential
+from keras.layers import Input, Dense, Dropout, Flatten, Activation, Reshape, BatchNormalization
+from keras.layers.convolutional import Conv2D, ZeroPadding2D, Conv2DTranspose
+from keras.layers.pooling import MaxPooling2D, AveragePooling2D, GlobalAveragePooling2D
+from keras.optimizers import SGD, Adam, Adadelta
+from keras.callbacks import ModelCheckpoint
+import numpy as np
+import csv
+import sys
+import os
+from tensorflow.python.client import device_lib
+print(device_lib.list_local_devices())
+
+def load_data(train_data_path):
+    X_train = []
+    Y_train = []
+
+    text = open(train_data_path, 'r', encoding='big5') 
+    row = csv.reader(text , delimiter=",")
+    for i,r in enumerate(row):
+        if i == 0:
+            continue
+        Y_train.append(int(r[0]))
+        X_train.append(r[1].split())
+
+
+
+    return ( np.reshape(np.array(X_train,dtype='int'),(len(X_train),48,48,1)), keras.utils.to_categorical(np.array(Y_train,dtype='int')) )
+
+
+if __name__ == '__main__':
+    train_data_path = 'data/train.csv'
+    X_train, Y_train = load_data(train_data_path)
+    num_classes = Y_train.shape[1]
+
+    print(X_train.shape)
+    print(Y_train.shape)
+
+    datagen = ImageDataGenerator(
+    featurewise_center=True,
+    featurewise_std_normalization=True,
+    rotation_range=20,
+    width_shift_range=0.2,
+    height_shift_range=0.2,
+    horizontal_flip=True)
+
+    datagen.fit(X_train)
+
+    
+    #model = load_model('check_point/'+sys.argv[1])
+    model = Sequential()
+    model.add(Conv2D(filters=8, kernel_size=(9, 9), padding='same',
+                            name='image_array', input_shape=(48,48,1)))
+    model.add(BatchNormalization())
+    model.add(Conv2D(filters=8, kernel_size=(9, 9), padding='same'))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(AveragePooling2D(pool_size=(2, 2), padding='same'))
+    model.add(Dropout(.2))
+
+    model.add(Conv2D(filters=16, kernel_size=(7, 7), padding='same'))
+    model.add(BatchNormalization())
+    model.add(Conv2D(filters=16, kernel_size=(7, 7), padding='same'))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(AveragePooling2D(pool_size=(2, 2), padding='same'))
+    model.add(Dropout(.2))
+
+    model.add(Conv2D(filters=32, kernel_size=(5, 5), padding='same'))
+    model.add(BatchNormalization())
+    model.add(Conv2D(filters=32, kernel_size=(5, 5), padding='same'))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(AveragePooling2D(pool_size=(2, 2), padding='same'))
+    model.add(Dropout(.2))
+
+    model.add(Conv2D(filters=64, kernel_size=(3, 3), padding='same'))
+    model.add(BatchNormalization())
+    model.add(Conv2D(filters=64, kernel_size=(3, 3), padding='same'))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(AveragePooling2D(pool_size=(2, 2), padding='same'))
+    model.add(Dropout(.2))
+
+    model.add(Conv2D(filters=128, kernel_size=(3, 3), padding='same'))
+    model.add(BatchNormalization())
+    model.add(Conv2D(filters=128, kernel_size=(3, 3), padding='same'))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(AveragePooling2D(pool_size=(2, 2), padding='same'))
+    model.add(Dropout(.2))
+
+    model.add(Conv2D(filters=256, kernel_size=(3, 3), padding='same'))
+    model.add(BatchNormalization())
+    model.add(Conv2D(filters=256, kernel_size=(3, 3), padding='same'))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    #model.add(AveragePooling2D(pool_size=(2, 2), padding='same'))
+    model.add(Dropout(.2))
+
+    model.add(Conv2D(filters=512, kernel_size=(2, 2), padding='same'))
+    model.add(BatchNormalization())
+    model.add(Conv2D(filters=512, kernel_size=(2, 2), padding='same'))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    #model.add(AveragePooling2D(pool_size=(2, 2), padding='same'))
+    model.add(Dropout(.2))
+
+    model.add(Conv2D(filters=num_classes, kernel_size=(3, 3), padding='same'))
+    model.add(GlobalAveragePooling2D())     
+
+    #model.add(Flatten())
+    model.add(Dense(256, activation='relu'))
+    model.add(Dropout(.7))
+    model.add(Dense(256, activation='relu'))
+    model.add(Dropout(.7))
+
+    model.add(Dense(7, activation='softmax'))
+
+    # opt = SGD(lr=0.1, decay=1e-6, momentum=0.9, nesterov=True)
+    # opt = Adam(lr=1e-6)
+    opt = Adadelta(lr=0.1, rho=0.95, epsilon=1e-08)
+    model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
+    model.summary()
+    #set check point
+    filepath="check_point/weights-improvement-{epoch:02d}-{val_acc:.2f}.hdf5"
+    checkpoint = ModelCheckpoint(filepath, monitor='val_acc', verbose=1, save_best_only=True, mode='max')
+    callbacks_list = [checkpoint]
+    # Fit the model
+    '''
+    model.fit_generator(datagen.flow(X_train, Y_train, batch_size=32),steps_per_epoch=len(X_train) / 32, epochs=300)
+    
+    for e in range(300):
+    print('Epoch', e)
+    batches = 0
+    for x_batch, y_batch in datagen.flow(X_train, Y_train, batch_size=32):
+        model.fit(x_batch, y_batch)
+        batches += 1
+        if batches >= len(x_train) / 32:
+            # we need to break the loop by hand because
+            # the generator loops indefinitely
+            break
+    '''
+    model.fit(X_train, Y_train, validation_split=0.1, epochs=300, batch_size=32, callbacks=callbacks_list, shuffle =True, verbose=1)

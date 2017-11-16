@@ -1,6 +1,6 @@
 import keras
 from keras.models import Model, load_model
-from keras.layers import Input, Dense, Dropout, Flatten, Activation, Reshape
+from keras.layers import Input, Dense, Dropout, Flatten, Activation, Reshape, BatchNormalization
 from keras.layers.convolutional import Conv2D, ZeroPadding2D, Conv2DTranspose
 from keras.layers.pooling import MaxPooling2D, AveragePooling2D
 from keras.optimizers import SGD, Adam, Adadelta
@@ -40,29 +40,52 @@ if __name__ == '__main__':
     #model = load_model('check_point/'+sys.argv[1])
      
     input_img = Input(shape=(48, 48, 1))
-    block1 = Conv2D(30, (3, 3), padding='same', activation='relu')(input_img)
-    block1 = Dropout(0.2)(block1)
+    block1 = Conv2D(128, (5, 5), activation='relu')(input_img)
+    block1 = BatchNormalization()(block1)
+    block1 = MaxPooling2D(pool_size=(3, 3), strides=(1, 1))(block1)
+    block1 = Dropout(0.25)(block1)
 
-    block2 = Conv2D(40, (5, 5), padding='same', activation='relu')(block1)
-    block2 = AveragePooling2D(pool_size=(4, 4), strides=(2, 2))(block2)
-    block2 = Dropout(0.2)(block2)
+    block2 = Conv2D(64, (3, 3), activation='relu')(block1)
+    block2 = BatchNormalization()(block2)
+    block2 = MaxPooling2D(pool_size=(2, 2), strides=(1, 1))(block2)
+    block2 = Dropout(0.25)(block2)
 
-    block3 = Conv2D(50, (5, 5), activation='relu')(block2)
-    block3 = MaxPooling2D(pool_size=(2, 2), strides=(1, 1))(block3)
-    block3 = Dropout(0.2)(block3)
+    block3 = Conv2D(64, (3, 3), activation='relu')(block2)
+    block3 = Dropout(0.25)(block3)
 
-    fc1 = Flatten()(block3)
-    fc1 = Dense(200, activation='relu')(fc1)
+    block4 = Conv2D(32, (2, 2), activation='relu')(block3)
+    block4 = MaxPooling2D(pool_size=(2, 2), strides=(1, 1))(block4)
+    block4 = Dropout(0.25)(block4)
+
+    block5 = Conv2D(12, (3, 3), activation='relu')(block4)
+    block5 = Dropout(0.25)(block5)
+
+    block6 = Conv2D(16, (2, 2), activation='relu')(block5)
+    block6 = MaxPooling2D(pool_size=(2, 2), strides=(1, 1))(block6)
+    block6 = Dropout(0.25)(block6)
+
+    #block7 = Conv2D(32, (3, 3), activation='relu')(block6)
+    #block7 = Dropout(0.25)(block7)
+    #block7 = BatchNormalization()(block7)
+
+    #block8 = Conv2D(32, (2, 2), activation='relu')(block7)
+    #block8 = MaxPooling2D(pool_size=(2, 2), strides=(1, 1))(block8)
+    #block8 = Dropout(0.25)(block8)
+    #block8 = BatchNormalization()(block8)
+
+    fc1 = Flatten()(block6)
+    fc1 = Dense(300, activation='relu')(fc1)
     fc1 = Dropout(0.5)(fc1)
-    fc2 = Dense(100, activation='relu')(fc1)
+    fc2 = Dense(300, activation='relu')(fc1)
     fc2 = Dropout(0.5)(fc2)
-
+    fc2 = BatchNormalization()(fc2)
+    
     predict = Dense(7)(fc2)
     predict = Activation('softmax')(predict)
     model = Model(inputs=input_img, outputs=predict)
 
     # opt = SGD(lr=0.1, decay=1e-6, momentum=0.9, nesterov=True)
-    # opt = Adam(lr=1e-3)
+    # opt = Adam(lr=1e-6)
     opt = Adadelta(lr=0.1, rho=0.95, epsilon=1e-08)
     model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
     model.summary()
@@ -71,4 +94,4 @@ if __name__ == '__main__':
     checkpoint = ModelCheckpoint(filepath, monitor='val_acc', verbose=1, save_best_only=True, mode='max')
     callbacks_list = [checkpoint]
     # Fit the model
-    model.fit(X_train, Y_train, validation_split=0.2, epochs=1500, batch_size=256, callbacks=callbacks_list, shuffle =True, verbose=1)
+    model.fit(X_train, Y_train, validation_split=0.1, epochs=300, batch_size=32, callbacks=callbacks_list, shuffle =True, verbose=1)
