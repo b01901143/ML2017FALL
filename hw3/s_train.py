@@ -50,19 +50,12 @@ if __name__ == '__main__':
 
     
     #model = load_model('check_point/'+sys.argv[1])
+    
     model = Sequential()
-    model.add(Conv2D(filters=8, kernel_size=(9, 9), padding='same',
+    model.add(Conv2D(filters=16, kernel_size=(9, 9), padding='same',
                             name='image_array', input_shape=(48,48,1)))
     model.add(BatchNormalization())
-    model.add(Conv2D(filters=8, kernel_size=(9, 9), padding='same'))
-    model.add(BatchNormalization())
-    model.add(Activation('relu'))
-    model.add(AveragePooling2D(pool_size=(2, 2), padding='same'))
-    model.add(Dropout(.2))
-
-    model.add(Conv2D(filters=16, kernel_size=(7, 7), padding='same'))
-    model.add(BatchNormalization())
-    model.add(Conv2D(filters=16, kernel_size=(7, 7), padding='same'))
+    model.add(Conv2D(filters=16, kernel_size=(9, 9), padding='same'))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(AveragePooling2D(pool_size=(2, 2), padding='same'))
@@ -95,14 +88,6 @@ if __name__ == '__main__':
     model.add(Conv2D(filters=256, kernel_size=(3, 3), padding='same'))
     model.add(BatchNormalization())
     model.add(Conv2D(filters=256, kernel_size=(3, 3), padding='same'))
-    model.add(BatchNormalization())
-    model.add(Activation('relu'))
-    #model.add(AveragePooling2D(pool_size=(2, 2), padding='same'))
-    model.add(Dropout(.2))
-
-    model.add(Conv2D(filters=512, kernel_size=(2, 2), padding='same'))
-    model.add(BatchNormalization())
-    model.add(Conv2D(filters=512, kernel_size=(2, 2), padding='same'))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
     #model.add(AveragePooling2D(pool_size=(2, 2), padding='same'))
@@ -118,10 +103,10 @@ if __name__ == '__main__':
     model.add(Dropout(.7))
 
     model.add(Dense(7, activation='softmax'))
-
+    
     # opt = SGD(lr=0.1, decay=1e-6, momentum=0.9, nesterov=True)
     # opt = Adam(lr=1e-6)
-    opt = Adadelta(lr=0.1, rho=0.95, epsilon=1e-08)
+    opt = Adadelta(lr=0.8, rho=0.95, epsilon=1e-08)
     model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
     model.summary()
     #set check point
