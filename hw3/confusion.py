@@ -1,9 +1,10 @@
-from keras.models import loadmodel
-from sklearn.metrics import confusionmatrix
-from utils import *
+from keras.models import load_model
+from sklearn.metrics import confusion_matrix
 import itertools
 import numpy as np
 import matplotlib.pyplot as plt
+import sys
+import csv
 
 def load_data(train_data_path):
     X_train = []
@@ -23,14 +24,12 @@ def load_data(train_data_path):
 
 def split_valid_set(X_all, Y_all, percentage):
     all_data_size = len(X_all)
-    valid_data_size = int(floor(all_data_size * percentage))
-
-    X_all, Y_all = _shuffle(X_all, Y_all)
+    valid_data_size = int(all_data_size * percentage)
 
     X_train, Y_train = X_all[0:valid_data_size], Y_all[0:valid_data_size]
     X_valid, Y_valid = X_all[valid_data_size:], Y_all[valid_data_size:]
 
-    return X_train, Y_train, X_valid, Y_valid
+    return X_valid, Y_valid
 
 def plotconfusionmatrix(cm, classes,
                           title='Confusion matrix',
@@ -58,8 +57,8 @@ def main():
     model_path = 'check_point/'+sys.argv[1]
     train_data_path = 'data/train.csv'
     dev_feats, te_labels = load_data(train_data_path)
-    dev_feats, te_labels = split_valid_set( dev_feats, te_labels, 0.1 )
-
+    dev_feats, te_labels = split_valid_set( dev_feats, te_labels, 0.01 )
+    print("HHHHH")
     emotion_classifier = load_model(model_path)
     np.set_printoptions(precision=2)
     predictions = emotion_classifier.predict(dev_feats)
@@ -72,5 +71,5 @@ def main():
     plot_confusion_matrix(conf_mat, classes=["Angry","Disgust","Fear","Happy","Sad","Surprise","Neutral"])
     plt.show()
 
-if __name=='__main':
+if __name__=='__main__':
     main()

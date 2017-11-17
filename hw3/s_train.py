@@ -34,7 +34,7 @@ def load_data(train_data_path):
 
 
 if __name__ == '__main__':
-    train_data_path = 'data/train.csv'
+    train_data_path = sys.argv[1]
     X_train, Y_train = load_data(train_data_path)
     num_classes = Y_train.shape[1]
 
@@ -143,5 +143,5 @@ if __name__ == '__main__':
     plt.savefig('acc.png')
     plt.show()
 
-    model.summary()
-    plot_model(model,to_file='model.png')
+    # model.summary()
+    # plot_model(model,to_file='model.png')
