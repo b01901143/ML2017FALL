@@ -11,6 +11,9 @@ import csv
 import sys
 import os
 from tensorflow.python.client import device_lib
+import matplotlib.pyplot as plt
+from keras.utils.vis_utils import plot_model
+
 print(device_lib.list_local_devices())
 
 def load_data(train_data_path):
@@ -59,7 +62,7 @@ if __name__ == '__main__':
     model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(AveragePooling2D(pool_size=(2, 2), padding='same'))
-    model.add(Dropout(.2))
+    model.add(Dropout(.3))
 
     model.add(Conv2D(filters=32, kernel_size=(5, 5), padding='same'))
     model.add(BatchNormalization())
@@ -67,7 +70,7 @@ if __name__ == '__main__':
     model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(AveragePooling2D(pool_size=(2, 2), padding='same'))
-    model.add(Dropout(.2))
+    model.add(Dropout(.3))
 
     model.add(Conv2D(filters=64, kernel_size=(3, 3), padding='same'))
     model.add(BatchNormalization())
@@ -75,7 +78,7 @@ if __name__ == '__main__':
     model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(AveragePooling2D(pool_size=(2, 2), padding='same'))
-    model.add(Dropout(.2))
+    model.add(Dropout(.3))
 
     model.add(Conv2D(filters=128, kernel_size=(3, 3), padding='same'))
     model.add(BatchNormalization())
@@ -83,7 +86,7 @@ if __name__ == '__main__':
     model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(AveragePooling2D(pool_size=(2, 2), padding='same'))
-    model.add(Dropout(.2))
+    model.add(Dropout(.3))
 
     model.add(Conv2D(filters=256, kernel_size=(3, 3), padding='same'))
     model.add(BatchNormalization())
@@ -91,7 +94,7 @@ if __name__ == '__main__':
     model.add(BatchNormalization())
     model.add(Activation('relu'))
     #model.add(AveragePooling2D(pool_size=(2, 2), padding='same'))
-    model.add(Dropout(.2))
+    model.add(Dropout(.3))
 
     model.add(Conv2D(filters=num_classes, kernel_size=(3, 3), padding='same'))
     model.add(GlobalAveragePooling2D())     
@@ -99,16 +102,17 @@ if __name__ == '__main__':
     #model.add(Flatten())
     model.add(Dense(256, activation='relu'))
     model.add(Dropout(.7))
-    model.add(Dense(256, activation='relu'))
+    model.add(Dense(128, activation='relu'))
     model.add(Dropout(.7))
 
     model.add(Dense(7, activation='softmax'))
     
+    model.summary()
+
     # opt = SGD(lr=0.1, decay=1e-6, momentum=0.9, nesterov=True)
     # opt = Adam(lr=1e-6)
-    opt = Adadelta(lr=0.8, rho=0.95, epsilon=1e-08)
+    opt = Adadelta(lr=0.5, rho=0.95, epsilon=1e-08)
     model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
-    model.summary()
     #set check point
     filepath="check_point/weights-improvement-{epoch:02d}-{val_acc:.2f}.hdf5"
     checkpoint = ModelCheckpoint(filepath, monitor='val_acc', verbose=1, save_best_only=True, mode='max')
@@ -128,4 +132,16 @@ if __name__ == '__main__':
             # the generator loops indefinitely
             break
     '''
-    model.fit(X_train, Y_train, validation_split=0.1, epochs=300, batch_size=32, callbacks=callbacks_list, shuffle =True, verbose=1)
+    train_history = model.fit(X_train, Y_train, validation_split=0.1, epochs=100, batch_size=32, callbacks=callbacks_list, shuffle =True, verbose=1)
+    loss = train_history.history['acc']
+    val_loss = train_history.history['val_acc']
+    plt.plot(loss)
+    plt.plot(val_loss)
+    plt.legend(['acc', 'val_acc'])
+    plt.xlabel('epochs')
+    plt.ylabel('accuracy')
+    plt.savefig('acc.png')
+    plt.show()
+
+    model.summary()
+    plot_model(model,to_file='model.png')
