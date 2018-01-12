@@ -7,6 +7,7 @@ from sklearn.cluster import KMeans
 import csv
 from sklearn.preprocessing import scale
 from sklearn.manifold import TSNE
+import sys
 
 def tsne_plot(data, predict_labels):
 
@@ -41,13 +42,13 @@ def tsne_plot(data, predict_labels):
             plt.scatter(x[i],y[i], facecolors='none', edgecolors='b')
     plt.savefig('imagevec.png',dpi=500)
 
-X = np.load('data/image.npy')
+X = np.load(sys.argv[1])
 X = X.astype(float)/255
 print(X.shape)
 pca = decomposition.PCA(n_components=400, whiten=True,svd_solver="full")
-pca.fit(X)
-#X_r = (pca.components_)
-X_r = pca.transform(X)
+pca.fit(X.T)
+X_r = (pca.components_).T
+#X_r = pca.transform(X)
 print(X_r.shape)
 
 kmeans = KMeans(n_clusters=2)
@@ -55,6 +56,7 @@ kmeans.fit(X_r)
 
 ans = []
 labels = kmeans.labels_
+'''
 data = []
 predict_labels = []
 Xv = np.load('data/visualization.npy')
@@ -70,8 +72,8 @@ data = np.array(data, dtype=np.float64)
 print(data.shape)
 
 tsne_plot(data, predict_labels)
-
-test_data_path = 'data/test_case.csv'
+'''
+test_data_path = sys.argv[2]
 text = open(test_data_path, 'r', encoding='big5') 
 row = csv.reader(text , delimiter=",")
 for i,r in enumerate(row):
@@ -81,7 +83,7 @@ for i,r in enumerate(row):
     b = labels[int(r[2])]
     ans.append(int(a==b))
 
-output_path = 'out.csv'
+output_path = sys.argv[3]
 print('=====Write output to %s =====' % output_path)
 with open(output_path, 'w') as f:
     f.write('ID,Ans\n')
