@@ -45,17 +45,30 @@ padded_docs_test = pad_sequences(encoded_docs_test, 15, padding='pre')
 encoded_docs_test=np.array(encoded_docs_test)
 test4text=padded_docs_test.reshape(len(padded_docs_test),15)
 text4audio=np.zeros((len(test_text),246,39))
+
+def downsampling(audio):
+    downudio=np.zeros((len(audio),246,39))
+    for i in range(len(audio)):
+        daudio=audio[i,:len(audio[i]):2,:]
+        downudio[i,246-len(daudio):246,:]=daudio
+    return downudio
+
 for i in range(2000):
     text4audio[4*i,246-len(test_audio[i]):246,:]=test_audio[i]
     text4audio[4*i+1,246-len(test_audio[i]):246,:]=test_audio[i]
     text4audio[4*i+2,246-len(test_audio[i]):246,:]=test_audio[i]
     text4audio[4*i+3,246-len(test_audio[i]):246,:]=test_audio[i]   
 
+test_down=downsampling(text4audio)
+
 model=keras.models.load_model(sys.argv[1])
 pre=model.predict([text4audio,padded_docs_test], batch_size=512)
+pre_down=model.predict([test_down,padded_docs_test], batch_size=512)
 fi=[]
 for i in range(int(len(pre)/4)):
-    can=pre[4*i:4*i+4]
+    prob      = pre[4*i : 4*i+4]
+    prob_down = pre_down[4*i : 4*i+4]
+    can = prob*prob_down
     #input(pre[4*i:4*i+4])
     #input(np.argmax(can))
     fi.append(np.argmax(can))
